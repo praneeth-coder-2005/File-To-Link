@@ -13,7 +13,26 @@ from aiohttp import web
 from .server import web_server
 from .utils.keepalive import ping_server
 from Adarsh.bot.clients import initialize_clients
+# ---- Time Sync Fix ----
+import time
+import ntplib
+import os
 
+try:
+    c = ntplib.NTPClient()
+    r = c.request('pool.ntp.org', version=3)
+    time_offset = r.tx_time - time.time()
+    _time = time.time
+
+    def synced_time():
+        return _time() + time_offset
+
+    time.time = synced_time
+    os.environ['TZ'] = 'UTC'
+    print("[✅] Time synced with NTP.")
+except Exception as e:
+    print(f"[⚠️] NTP time sync failed: {e}")
+# ------------------------
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
